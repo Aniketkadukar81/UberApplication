@@ -4,15 +4,28 @@ import com.aniket.uber.uberApp.dto.DriverDto;
 import com.aniket.uber.uberApp.dto.RideDto;
 import com.aniket.uber.uberApp.dto.RideRequestDto;
 import com.aniket.uber.uberApp.dto.RiderDto;
+import com.aniket.uber.uberApp.entities.RideRequest;
 import com.aniket.uber.uberApp.services.RiderService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class RiderServiceImpl implements RiderService {
+
+    private final ModelMapper modelMapper;
+
     @Override
     public RideRequestDto requestRide(RideRequestDto rideRequestDto) {
+        RideRequest rideRequest = modelMapper.map(rideRequestDto, RideRequest.class);
+
+        log.info(rideRequest.toString());
+
         return null;
     }
 
