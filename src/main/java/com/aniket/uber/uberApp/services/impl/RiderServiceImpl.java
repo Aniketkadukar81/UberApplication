@@ -5,7 +5,11 @@ import com.aniket.uber.uberApp.dto.RideDto;
 import com.aniket.uber.uberApp.dto.RideRequestDto;
 import com.aniket.uber.uberApp.dto.RiderDto;
 import com.aniket.uber.uberApp.entities.RideRequest;
+import com.aniket.uber.uberApp.entities.enums.RideRequestStatus;
+import com.aniket.uber.uberApp.repositories.RideRequestRepository;
 import com.aniket.uber.uberApp.services.RiderService;
+import com.aniket.uber.uberApp.strategies.DriverMatchingStrategy;
+import com.aniket.uber.uberApp.strategies.RideFareCalculationStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -19,14 +23,24 @@ import java.util.List;
 public class RiderServiceImpl implements RiderService {
 
     private final ModelMapper modelMapper;
+    private final RideFareCalculationStrategy rideFareCalculationStrategy;
+    private final DriverMatchingStrategy driverMatchingStrategy;
+    private final RideRequestRepository rideRequestRepository;
+
 
     @Override
     public RideRequestDto requestRide(RideRequestDto rideRequestDto) {
         RideRequest rideRequest = modelMapper.map(rideRequestDto, RideRequest.class);
+        rideRequest.setRideRequestStatus(RideRequestStatus.PENDING);
 
-        log.info(rideRequest.toString());
+        Double fare = rideFareCalculationStrategy.calculateFare(rideRequest);
+        rideRequest.setFare(fare);
 
-        return null;
+        RideRequest savedRideRequest = rideRequestRepository.save(rideRequest);
+
+        driverMatchingStrategy.findMatchingDriver(rideRequest);
+
+        return modelMapper.map(savedRideRequest,RideRequestDto.class);
     }
 
     @Override
