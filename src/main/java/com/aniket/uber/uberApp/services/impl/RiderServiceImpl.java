@@ -12,15 +12,13 @@ import com.aniket.uber.uberApp.exceptions.ResourceNotFoundException;
 import com.aniket.uber.uberApp.repositories.RideRequestRepository;
 import com.aniket.uber.uberApp.repositories.RiderRepository;
 import com.aniket.uber.uberApp.services.RiderService;
-import com.aniket.uber.uberApp.strategies.DriverMatchingStrategy;
-import com.aniket.uber.uberApp.strategies.RideFareCalculationStrategy;
 import com.aniket.uber.uberApp.strategies.RideStrategyManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Security;
 import java.util.List;
 
 @Service
@@ -30,27 +28,25 @@ public class RiderServiceImpl implements RiderService {
 
     private final ModelMapper modelMapper;
     private final RideStrategyManager rideStrategyManager;
-    private final DriverMatchingStrategy driverMatchingStrategy;
     private final RideRequestRepository rideRequestRepository;
     private final RiderRepository riderRepository;
 
 
     @Override
+    @Transactional
     public RideRequestDto requestRide(RideRequestDto rideRequestDto) {
 
         Rider rider = getCurrentRider();
-
         RideRequest rideRequest = modelMapper.map(rideRequestDto, RideRequest.class);
-
         rideRequest.setRideRequestStatus(RideRequestStatus.PENDING);
         rideRequest.setRider(rider);
 
-        Double fare = rideStrategyManager.rideFareCalculationStrategy().calculateFare(rideRequest);
+        double fare = rideStrategyManager.rideFareCalculationStrategy().calculateFare(rideRequest);
         rideRequest.setFare(fare);
 
         RideRequest savedRideRequest = rideRequestRepository.save(rideRequest);
 
-        driverMatchingStrategy.findMatchingDriver(rideRequest);
+//        rideStrategyManager.driverMatchingStrategy(rider.getRating()).findMatchingDriver(rideRequest);
 
         return modelMapper.map(savedRideRequest,RideRequestDto.class);
     }
